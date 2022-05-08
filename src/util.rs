@@ -103,7 +103,7 @@ pub fn get_notes_from_samples(
         result.len()
     );
 
-    let count_min_limit = (samples.data.len() as f32 * 1.5 / samples.rate as f32) as usize;
+    let count_min_limit = (samples.data.len() as f32 * 1.8 / samples.rate as f32) as usize;
     let count_max_limit = (samples.data.len() as f32 * 2.5 / samples.rate as f32) as usize;
     if result.len() < count_min_limit {
         result = get_notes_from_samples(samples, difficulty_limit - 0.02)?;
@@ -117,9 +117,9 @@ pub fn get_notes_from_samples(
 pub fn get_walls_from_notes(notes: &[Note]) -> Vec<Wall> {
     let mut rng = rand::thread_rng();
     let mut figures = vec![];
-    figures.extend(vec![0; notes.len() / 3]);
+    figures.extend(vec![0; notes.len() / 2]);
     figures.extend(vec![1; notes.len() / 3]);
-    figures.extend(vec![2; notes.len() / 3]);
+    figures.extend(vec![2; notes.len() / 6]);
     figures.shuffle(&mut rng);
 
     let mut prev_wall = None;
@@ -141,6 +141,8 @@ pub fn get_walls_from_notes(notes: &[Note]) -> Vec<Wall> {
         })
         .collect()
 }
+
+
 
 pub fn gen_yml(
     OutputParams {
@@ -187,9 +189,11 @@ levels:
 "
     );
 
+    let mut rng = rand::thread_rng();
+
     for wall in walls {
         let time = format!("{:.2}", wall.time);
-        let code = wall.to_code();
+        let code = wall.to_code(&mut rng);
 
         result.push_str(
             format!("      - second: {time}\n        obj: {code}\n        track: 0\n").as_str(),

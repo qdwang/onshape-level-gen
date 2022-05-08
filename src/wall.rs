@@ -2,8 +2,26 @@
 //!
 use super::*;
 use rand::rngs::ThreadRng;
+use rand::seq::SliceRandom;
 
 impl Wall {
+    pub fn choose_shape_patterns(main_pose: &str, mut rng: &mut ThreadRng) -> String {
+        let available_chars = match main_pose {
+            "CUC" => ['0', '1', '2', '3', '4', '5', '7', '8', '9', 'A', 'B'].as_slice(),
+            "CDC" => ['0', '2', '3', '4', '5', '7', '8', '9', 'A', 'B'].as_slice(),
+            "LUC" => ['3', '8'].as_slice(),
+            "RUC" => ['3', '8'].as_slice(),
+            _ => ['2'].as_slice(),
+        };
+
+        format!(
+            "{}{}{}",
+            available_chars.choose(&mut rng).unwrap(),
+            available_chars.choose(&mut rng).unwrap(),
+            main_pose
+        )
+    }
+
     pub fn new(
         note: &Note,
         rng: &mut ThreadRng,
@@ -11,7 +29,7 @@ impl Wall {
         time2next: f32,
         figures: &mut Vec<i32>,
         prev_wall: &mut Option<Wall>,
-        acc_coins: &mut u8
+        acc_coins: &mut u8,
     ) -> Self {
         let select: i32 = if (time2prev > 0.5f32
             || matches!(
@@ -32,11 +50,8 @@ impl Wall {
 
         let wall_type = match select {
             0 => WallType::Shape {
-                hands_over: rand::random(),
                 position: rand::random(),
-                lean: rand::random(),
                 standing: rand::random(),
-                leg_lunge: rand::random(),
             },
             1 => WallType::Hit {
                 position: rand::random(),
@@ -75,18 +90,18 @@ impl Wall {
         result
     }
 
-    pub fn to_code(&self) -> String {
+    pub fn to_code(&self, mut rng: &mut ThreadRng) -> String {
         match self.t {
-            WallType::Shape {
-                hands_over,
-                position,
-                lean,
-                standing,
-                leg_lunge,
-            } => {
-                let result = match (hands_over, position, lean, standing, leg_lunge) {
-                    _ => "WP.C22CDC",
-                };
+            WallType::Shape { position, standing } => {
+                let mut result = String::with_capacity(9);
+                result.push_str("WP.C");
+                result.push_str(
+                    match (position, standing) {
+                        (_, true) => Self::choose_shape_patterns("CDC", &mut rng),
+                        (_, false) => Self::choose_shape_patterns("CUC", &mut rng),
+                    }
+                    .as_str(),
+                );
                 result.to_owned()
             }
             WallType::Hit {

@@ -37,11 +37,8 @@ pub enum DodgeType {
 #[derive(Debug, Clone)]
 pub enum WallType {
     Shape {
-        hands_over: bool,
         position: LCR,
-        lean: LCR,
         standing: bool,
-        leg_lunge: LCR,
     },
     Hit {
         position: LCR,
