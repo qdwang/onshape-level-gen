@@ -7,24 +7,27 @@ impl Wall {
     pub fn new(
         note: &Note,
         rng: &mut ThreadRng,
+        time2prev: f32,
         time2next: f32,
-        acc_coin_time: &mut f32,
+        figures: &mut Vec<i32>,
         prev_wall: &mut Option<Wall>,
+        acc_coins: &mut u8
     ) -> Self {
-        const TIME2NEXT_SPAN : f32 = 0.8f32;
-        const MAX_COIN_TIME : f32 = 3f32;
-        const TIME2HIT : f32 = 2f32;
-
-        let select: i32 = if time2next < TIME2NEXT_SPAN && *acc_coin_time < MAX_COIN_TIME {
-            *acc_coin_time += time2next;
-            3
+        let select: i32 = if (time2prev > 0.5f32
+            || matches!(
+                prev_wall,
+                Some(Wall {
+                    time: _,
+                    t: WallType::Coin { x: _, y: _ }
+                })
+            ))
+            && (time2next > 0.5f32 || *acc_coins >= 8)
+        {
+            *acc_coins = 0;
+            figures.pop().unwrap_or(3)
         } else {
-            *acc_coin_time = 0f32;
-            if time2next > TIME2HIT {
-                1
-            } else {
-                rng.gen_range(0..=2)
-            }
+            *acc_coins += 1;
+            3
         };
 
         let wall_type = match select {
@@ -44,7 +47,7 @@ impl Wall {
                 let d = (time2next * 100.) as u16;
                 WallType::Dodge {
                     t: rand::random(),
-                    duration: d.saturating_sub(10),
+                    duration: d.saturating_sub(50),
                 }
             }
             _ => {
