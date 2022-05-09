@@ -3,6 +3,7 @@
 use super::*;
 use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
+use std::cmp;
 
 impl Wall {
     pub fn choose_shape_patterns(main_pose: &str, mut rng: &mut ThreadRng) -> String {
@@ -31,7 +32,10 @@ impl Wall {
         prev_wall: &mut Option<Wall>,
         acc_coins: &mut u8,
     ) -> Self {
-        let select: i32 = if (time2prev > 0.5f32
+        const MIN_PADDING: f32 = 0.5f32;
+        const MAX_COIN_COUNT: u8 = 6;
+
+        let select: i32 = if (time2prev > MIN_PADDING
             || matches!(
                 prev_wall,
                 Some(Wall {
@@ -39,7 +43,7 @@ impl Wall {
                     t: WallType::Coin { x: _, y: _ }
                 })
             ))
-            && (time2next > 0.5f32 || *acc_coins >= 8)
+            && (time2next > MIN_PADDING || *acc_coins >= MAX_COIN_COUNT)
         {
             *acc_coins = 0;
             figures.pop().unwrap_or(3)
@@ -50,7 +54,7 @@ impl Wall {
 
         let wall_type = match select {
             0 => WallType::Shape {
-                position: rand::random(),
+                lean: rand::random(),
                 standing: rand::random(),
             },
             1 => WallType::Hit {
@@ -59,10 +63,27 @@ impl Wall {
                 hands: rand::random(),
             },
             2 => {
-                let d = (time2next * 100.) as u16;
+                let d = ((time2next * 100.) as u16).saturating_sub(50);
+
+                let t = if let Some(Wall {
+                    time: _,
+                    t: WallType::Dodge { t, duration: _ },
+                }) = prev_wall
+                {
+                    match t {
+                        DodgeType::TopLeft => DodgeType::TopRight,
+                        DodgeType::Left => DodgeType::Right,
+                        DodgeType::Top => rand::random(),
+                        DodgeType::Right => DodgeType::Left,
+                        DodgeType::TopRight => DodgeType::TopLeft,
+                    }
+                } else {
+                    rand::random()
+                };
+
                 WallType::Dodge {
-                    t: rand::random(),
-                    duration: d.saturating_sub(50),
+                    t,
+                    duration: cmp::max(d, 2),
                 }
             }
             _ => {
@@ -92,13 +113,15 @@ impl Wall {
 
     pub fn to_code(&self, mut rng: &mut ThreadRng) -> String {
         match self.t {
-            WallType::Shape { position, standing } => {
+            WallType::Shape { lean, standing } => {
                 let mut result = String::with_capacity(9);
                 result.push_str("WP.C");
                 result.push_str(
-                    match (position, standing) {
-                        (_, true) => Self::choose_shape_patterns("CDC", &mut rng),
-                        (_, false) => Self::choose_shape_patterns("CUC", &mut rng),
+                    match (lean, standing) {
+                        (LCR::L, true) => Self::choose_shape_patterns("LUC", &mut rng),
+                        (LCR::C, true) => Self::choose_shape_patterns("CUC", &mut rng),
+                        (LCR::R, true) => Self::choose_shape_patterns("RUC", &mut rng),
+                        (_, false) => Self::choose_shape_patterns("CDC", &mut rng),
                     }
                     .as_str(),
                 );

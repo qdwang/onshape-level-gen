@@ -37,7 +37,7 @@ pub enum DodgeType {
 #[derive(Debug, Clone)]
 pub enum WallType {
     Shape {
-        position: LCR,
+        lean: LCR,
         standing: bool,
     },
     Hit {
@@ -110,9 +110,10 @@ impl Display for Difficulty {
 
 impl Distribution<LCR> for Standard {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> LCR {
-        match rng.gen_range(0..=2) {
+        match rng.gen_range(0..=3) {
             0 => LCR::L,
             1 => LCR::C,
+            2 => LCR::C,
             _ => LCR::R,
         }
     }

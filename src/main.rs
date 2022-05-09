@@ -14,7 +14,7 @@ fn process(path: &str) -> Result<()> {
     println!("Writing to file: {}", output_params.output_file);
     fs::write(output_params.output_file, yml_content)?;
 
-    println!("Done");
+    println!("Done\n");
 
     Ok(())
 }

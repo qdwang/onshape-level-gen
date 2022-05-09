@@ -142,8 +142,6 @@ pub fn get_walls_from_notes(notes: &[Note]) -> Vec<Wall> {
         .collect()
 }
 
-
-
 pub fn gen_yml(
     OutputParams {
         title,
