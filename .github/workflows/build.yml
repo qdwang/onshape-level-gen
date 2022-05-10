@@ -7,8 +7,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_win:
-    runs-on: windows-2022
+  build_linux:
+    runs-on: ubuntu-18.04
+    outputs:
+      tag: ${{ steps.vars.outputs.tag }}
+      release_url: ${{ steps.tag_release.outputs.upload_url }}
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v2
@@ -19,7 +22,6 @@ jobs:
       - name: Set variables
         id: vars
         run: |
-          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
           echo "::set-output name=tag::$(git describe --tags HEAD)"
 
       - name: Compile
@@ -45,6 +47,55 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.tag_release.outputs.upload_url }}
-          asset_path: "onshape-level-gen/target/release/onshape-level-gen.exe"
-          asset_name: "onshape-level-gen.exe"
-          asset_content_type: application/vnd.microsoft.portable-executable
+          asset_path: "target/release/onshape-level-gen"
+          asset_name: ${{ format('onshapelevelgen-{0}-linux', steps.vars.outputs.tag) }}
+          asset_content_type: application/octet-stream
+
+
+  build_macos:
+    runs-on: macos-11
+    needs: [build_linux]
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          repository: qdwang/onshape-level-gen
+
+      - name: Compile
+        run: cargo build --release
+      
+      - name: Upload win version build
+        if: ${{ !contains(needs.build_linux.outputs.tag, '-') }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.build_linux.outputs.release_url }}
+          asset_path: "target/release/onshape-level-gen"
+          asset_name: ${{ format('onshapelevelgen-{0}-macos.exe', needs.build_linux.outputs.tag) }}
+          asset_content_type: application/octet-stream
+
+  build_win:
+    runs-on: windows-2022
+    needs: [build_linux]
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          repository: qdwang/onshape-level-gen
+
+      - name: Compile
+        run: cargo build --release
+      
+      - name: Upload win version build
+        if: ${{ !contains(needs.build_linux.outputs.tag, '-') }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.build_linux.outputs.release_url }}
+          asset_path: "target/release/onshape-level-gen.exe"
+          asset_name: ${{ format('onshapelevelgen-{0}-win.exe', needs.build_linux.outputs.tag) }}
+          asset_content_type: application/octet-stream
