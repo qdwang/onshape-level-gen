@@ -46,9 +46,6 @@ jobs:
     needs: [Build_Bridge_MacOS, Build_Bridge_Win]
     runs-on: ubuntu-18.04
     permissions: write-all
-    outputs:
-      sha_short: ${{ steps.vars.outputs.sha_short }}
-      tag: ${{ steps.vars.outputs.tag }}
     steps:
       - name: Check out qdwang/onshape-level-gen
         uses: actions/checkout@v2
@@ -104,7 +101,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: nightly
-          release_name: Nightly builds - ${{ needs.Build_Bridge_Linux.outputs.sha_short }}
+          release_name: Nightly builds - ${{ steps.vars.outputs.sha_short }}
           prerelease: true
           draft: false
           body: Automated builds for nightly prerelease via Github Actions
@@ -141,20 +138,20 @@ jobs:
 
       # Create version release if there is a version tag
       - name: Create tag release
-        if: ${{ !contains(needs.Build_Bridge_Linux.outputs.tag, '-') }}
+        if: ${{ !contains(steps.vars.outputs.tag, '-') }}
         id: tag_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ needs.Build_Bridge_Linux.outputs.tag }}
-          release_name: Release ${{ needs.Build_Bridge_Linux.outputs.tag }}
+          tag_name: ${{ steps.vars.outputs.tag }}
+          release_name: Release ${{ steps.vars.outputs.tag }}
           prerelease: false
           draft: false
           body: Automated builds for version releases via Github Actions
           
       - name: Upload linux version build
-        if: ${{ !contains(needs.Build_Bridge_Linux.outputs.tag, '-') }}
+        if: ${{ !contains(steps.vars.outputs.tag, '-') }}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -165,7 +162,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload win version build
-        if: ${{ !contains(needs.Build_Bridge_Linux.outputs.tag, '-') }}
+        if: ${{ !contains(steps.vars.outputs.tag, '-') }}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -176,7 +173,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload macos version build
-        if: ${{ !contains(needs.Build_Bridge_Linux.outputs.tag, '-') }}
+        if: ${{ !contains(steps.vars.outputs.tag, '-') }}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
