@@ -71,16 +71,13 @@ jobs:
 
       - name: Download QRPBridge libs
         uses: actions/download-artifact@v2
-        with:
-          path: target/release
 
       - name: Extract artifacts
         run: |
-          cd target/release
-          mv onshape-level-gen ~/onshapelevelgen-linux
+          mv target/release/onshape-level-gen ./onshapelevelgen-linux
           7z x *.zip
-          mv win.zip/* ~/onshapelevelgen-win.exe
-          mv macos.zip/* ~/onshapelevelgen-macos
+          mv win.zip/* ./onshapelevelgen-win.exe
+          mv macos.zip/* ./onshapelevelgen-macos
 
       - name: Get packages file name
         id: names
