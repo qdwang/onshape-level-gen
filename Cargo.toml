@@ -9,3 +9,7 @@ spectrum-analyzer = "1.2"
 rand = "0.8"
 thiserror = "1.0"
 anyhow = "1.0"
+
+[profile.release]
+codegen-units = 1
+lto="fat"

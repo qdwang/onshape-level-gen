@@ -1,0 +1,49 @@
+name: Build OnShape Level Generator
+
+on:
+  push:
+    branches: [ main ]
+  
+  workflow_dispatch:
+
+jobs:
+  build_win:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+        with:
+          repository: qdwang/onshape-level-gen
+
+      - name: Set variables
+        id: vars
+        run: |
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+          echo "::set-output name=tag::$(git describe --tags HEAD)"
+
+      - name: Compile
+        run: cargo build --release
+      
+      - name: Create tag release
+        if: ${{ !contains(steps.vars.outputs.tag, '-') }}
+        id: tag_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          release_name: Release ${{ steps.vars.outputs.tag }}
+          prerelease: false
+          draft: false
+          body: Automated builds for version releases via Github Actions
+
+      - name: Upload win version build
+        if: ${{ !contains(steps.vars.outputs.tag, '-') }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.tag_release.outputs.upload_url }}
+          asset_path: "onshape-level-gen/target/release/onshape-level-gen.exe"
+          asset_name: "onshape-level-gen.exe"
+          asset_content_type: application/vnd.microsoft.portable-executable
