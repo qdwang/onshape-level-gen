@@ -85,9 +85,9 @@ jobs:
       - name: Get packages file name
         id: names
         run: |
-          echo "::set-output name=linux_build::$(ls | grep linux)"
-          echo "::set-output name=win_build::$(ls | grep win)"
-          echo "::set-output name=macos_build::$(ls | grep macos)"
+          echo "::set-output name=linux_build::onshapelevelgen-linux"
+          echo "::set-output name=win_build::onshapelevelgen-win.exe"
+          echo "::set-output name=macos_build::onshapelevelgen-macos"
 
       # Publish builds
       - name: Remove nightly tag 
