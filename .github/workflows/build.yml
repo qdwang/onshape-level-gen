@@ -45,6 +45,7 @@ jobs:
   Build_Bridge_Linux:
     needs: [Build_Bridge_MacOS, Build_Bridge_Win]
     runs-on: ubuntu-18.04
+    permissions: write-all
     outputs:
       sha_short: ${{ steps.vars.outputs.sha_short }}
       tag: ${{ steps.vars.outputs.tag }}
