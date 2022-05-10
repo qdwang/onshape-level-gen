@@ -5,7 +5,8 @@ use std::{env, fs, path::Path};
 fn process(path: &str) -> Result<()> {
     let init_difficulty_limit = 1.2f32;
     let (samples, output_params) = get_data_from_ogg(path)?;
-    let notes = get_notes_from_samples(samples, init_difficulty_limit).map_err(|err| anyhow::anyhow!("{:?}", err))?;
+    let notes = get_notes_from_samples(samples, init_difficulty_limit)
+        .map_err(|err| anyhow::anyhow!("{:?}", err))?;
 
     let walls = get_walls_from_notes(&notes);
 
@@ -23,6 +24,12 @@ fn main() -> Result<()> {
     let args = env::args().collect::<Vec<String>>();
 
     match args.as_slice() {
+        [_] => {
+            println!(
+                "===== onshapelevelgen: A tool to generate OnShape VR game levels from music =====
+\nUsage: onshapelevelgen [your_ogg_vorbis_file | folder_contains_ogg_files]"
+            );
+        }
         [_, target] => {
             let target_path = Path::new(target);
             if target_path.is_dir() {
