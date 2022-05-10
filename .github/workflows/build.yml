@@ -1,102 +1,188 @@
-name: Build OnShape Level Generator
+name: Build OnShapeLevelGen binary
 
 on:
   push:
     branches: [ main ]
-  
+    
   workflow_dispatch:
 
 jobs:
-  build_linux:
-    runs-on: ubuntu-18.04
-    permissions: write-all
-    outputs:
-      tag: ${{ steps.vars.outputs.tag }}
-      release_url: ${{ steps.tag_release.outputs.upload_url }}
+  Build_Bridge_Win:
+    runs-on: windows-2019
     steps:
-      - name: Checkout the repo
+      - name: Check out qdwang/onshape-level-gen
+        uses: actions/checkout@v2
+        with:
+          repository: qdwang/onshape-level-gen
+
+      - name: Compile
+        run: cargo build --release
+
+      - name: Upload traget bin
+        uses: actions/upload-artifact@v2
+        with:
+          name: win.zip
+          path: target/release/onshape-level-gen.exe
+
+  Build_Bridge_MacOS:
+    runs-on: macos-11
+    steps:
+      - name: Check out qdwang/onshape-level-gen
+        uses: actions/checkout@v2
+        with:
+          repository: qdwang/onshape-level-gen
+
+      - name: Compile
+        run: cargo build --release
+
+      - name: Upload traget bin
+        uses: actions/upload-artifact@v2
+        with:
+          name: macos.zip
+          path: target/release/onshape-level-gen
+
+
+  Build_Bridge_Linux:
+    needs: [Build_Bridge_MacOS, Build_Bridge_Win]
+    runs-on: ubuntu-18.04
+    outputs:
+      sha_short: ${{ steps.vars.outputs.sha_short }}
+      tag: ${{ steps.vars.outputs.tag }}
+    steps:
+      - name: Check out qdwang/onshape-level-gen
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
           repository: qdwang/onshape-level-gen
 
+      # For better tag description
+      - name: Remove local nightly tag
+        run: git tag -d nightly
+
       - name: Set variables
         id: vars
         run: |
+          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
           echo "::set-output name=tag::$(git describe --tags HEAD)"
 
       - name: Compile
         run: cargo build --release
-      
+
+      - name: Download QRPBridge libs
+        uses: actions/download-artifact@v2
+        with:
+          path: target/release
+
+      - name: Extract artifacts
+        run: |
+          cd target/release
+          mv onshape-level-gen ~/onshapelevelgen-linux
+          7z x *.zip
+          mv win.zip/* ~/onshapelevelgen-win.exe
+          mv macos.zip/* ~/onshapelevelgen-macos
+
+      - name: Get packages file name
+        id: names
+        run: |
+          echo "::set-output name=linux_build::$(ls | grep linux)"
+          echo "::set-output name=win_build::$(ls | grep win)"
+          echo "::set-output name=macos_build::$(ls | grep macos)"
+
+      # Publish builds
+      - name: Remove nightly tag 
+        uses: dev-drprasad/delete-tag-and-release@v0.2.0
+        with:
+          delete_release: true
+          tag_name: nightly
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+
+      # Create nightly release as prerelease
+      - name: Create nightly prerelease
+        id: nightly_prerelease
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: nightly
+          release_name: Nightly builds - ${{ needs.Build_Bridge_Linux.outputs.sha_short }}
+          prerelease: true
+          draft: false
+          body: Automated builds for nightly prerelease via Github Actions
+
+      - name: Upload linux nightly build
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.nightly_prerelease.outputs.upload_url }}
+          asset_path: ${{ steps.names.outputs.linux_build }}
+          asset_name: ${{ steps.names.outputs.linux_build }}
+          asset_content_type: application/octet-stream
+
+      - name: Upload win nightly build
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.nightly_prerelease.outputs.upload_url }}
+          asset_path: ${{ steps.names.outputs.win_build }}
+          asset_name: ${{ steps.names.outputs.win_build }}
+          asset_content_type: application/octet-stream
+
+      - name: Upload macos nightly build
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.nightly_prerelease.outputs.upload_url }}
+          asset_path: ${{ steps.names.outputs.macos_build }}
+          asset_name: ${{ steps.names.outputs.macos_build }}
+          asset_content_type: application/octet-stream
+
+      # Create version release if there is a version tag
       - name: Create tag release
-        if: ${{ !contains(steps.vars.outputs.tag, '-') }}
+        if: ${{ !contains(needs.Build_Bridge_Linux.outputs.tag, '-') }}
         id: tag_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.vars.outputs.tag }}
-          release_name: Release ${{ steps.vars.outputs.tag }}
+          tag_name: ${{ needs.Build_Bridge_Linux.outputs.tag }}
+          release_name: Release ${{ needs.Build_Bridge_Linux.outputs.tag }}
           prerelease: false
           draft: false
           body: Automated builds for version releases via Github Actions
-
-      - name: Upload win version build
-        if: ${{ !contains(steps.vars.outputs.tag, '-') }}
+          
+      - name: Upload linux version build
+        if: ${{ !contains(needs.Build_Bridge_Linux.outputs.tag, '-') }}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.tag_release.outputs.upload_url }}
-          asset_path: "target/release/onshape-level-gen"
-          asset_name: ${{ format('onshapelevelgen-{0}-linux', steps.vars.outputs.tag) }}
+          asset_path: ${{ steps.names.outputs.linux_build }}
+          asset_name: ${{ steps.names.outputs.linux_build }}
           asset_content_type: application/octet-stream
 
-
-  build_macos:
-    runs-on: macos-11
-    needs: [build_linux]
-    steps:
-      - name: Checkout the repo
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          repository: qdwang/onshape-level-gen
-
-      - name: Compile
-        run: cargo build --release
-      
       - name: Upload win version build
-        if: ${{ !contains(needs.build_linux.outputs.tag, '-') }}
+        if: ${{ !contains(needs.Build_Bridge_Linux.outputs.tag, '-') }}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.build_linux.outputs.release_url }}
-          asset_path: "target/release/onshape-level-gen"
-          asset_name: ${{ format('onshapelevelgen-{0}-macos.exe', needs.build_linux.outputs.tag) }}
+          upload_url: ${{ steps.tag_release.outputs.upload_url }}
+          asset_path: ${{ steps.names.outputs.win_build }}
+          asset_name: ${{ steps.names.outputs.win_build }}
           asset_content_type: application/octet-stream
 
-  build_win:
-    runs-on: windows-2022
-    needs: [build_linux]
-    steps:
-      - name: Checkout the repo
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          repository: qdwang/onshape-level-gen
-
-      - name: Compile
-        run: cargo build --release
-      
-      - name: Upload win version build
-        if: ${{ !contains(needs.build_linux.outputs.tag, '-') }}
+      - name: Upload macos version build
+        if: ${{ !contains(needs.Build_Bridge_Linux.outputs.tag, '-') }}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.build_linux.outputs.release_url }}
-          asset_path: "target/release/onshape-level-gen.exe"
-          asset_name: ${{ format('onshapelevelgen-{0}-win.exe', needs.build_linux.outputs.tag) }}
+          upload_url: ${{ steps.tag_release.outputs.upload_url }}
+          asset_path: ${{ steps.names.outputs.macos_build }}
+          asset_name: ${{ steps.names.outputs.macos_build }}
           asset_content_type: application/octet-stream
