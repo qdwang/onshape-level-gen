@@ -6,6 +6,7 @@ use rand::seq::SliceRandom;
 use std::cmp;
 
 impl Wall {
+    /// This function will generate a random shape by the given pose.
     pub fn choose_shape_patterns(main_pose: &str, mut rng: &mut ThreadRng) -> String {
         let available_chars = match main_pose {
             "CUC" => ['0', '1', '2', '3', '4', '5', '7', '8', '9', 'A', 'B'].as_slice(),

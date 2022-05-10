@@ -55,8 +55,6 @@ pub fn get_data_from_ogg(path: &str) -> Result<(Samples, OutputParams), DecoderE
 }
 
 /// Get a series of `Note` from a `Samples` object.
-///
-/// The core shapes generating algorithm is inside this function.
 pub fn get_notes_from_samples(
     samples: Samples,
     difficulty_limit: f32,
@@ -114,6 +112,7 @@ pub fn get_notes_from_samples(
     Ok(result)
 }
 
+/// Get a series Wall from a note slice
 pub fn get_walls_from_notes(notes: &[Note]) -> Vec<Wall> {
     let mut rng = rand::thread_rng();
     let mut figures = vec![];
@@ -142,6 +141,7 @@ pub fn get_walls_from_notes(notes: &[Note]) -> Vec<Wall> {
         .collect()
 }
 
+/// Generating the output yml string content
 pub fn gen_yml(
     OutputParams {
         title,
