@@ -13,12 +13,12 @@ jobs:
       - name: Checkout the repo
         uses: actions/checkout@v2
         with:
+          fetch-depth: 0
           repository: qdwang/onshape-level-gen
 
       - name: Set variables
         id: vars
         run: |
-          dir
           echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
           echo "::set-output name=tag::$(git describe --tags HEAD)"
 
