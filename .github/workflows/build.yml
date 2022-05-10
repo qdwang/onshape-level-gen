@@ -18,7 +18,7 @@ jobs:
       - name: Set variables
         id: vars
         run: |
-          ls
+          dir
           echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
           echo "::set-output name=tag::$(git describe --tags HEAD)"
 
