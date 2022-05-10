@@ -33,13 +33,17 @@ jobs:
           repository: qdwang/onshape-level-gen
 
       - name: Compile
-        run: cargo build --release
+        run: |
+          rustup target add aarch64-apple-darwin
+          cargo build --release
+          cargo build --release --target aarch64-apple-darwin
+          lipo -create -output ./onshape-level-gen ./target/release/onshape-level-gen ./target/aarch64-apple-darwin/release/onshape-level-gen
 
       - name: Upload traget bin
         uses: actions/upload-artifact@v2
         with:
           name: macos.zip
-          path: target/release/onshape-level-gen
+          path: onshape-level-gen
 
 
   Build_Bridge_Linux:
@@ -72,6 +76,7 @@ jobs:
       - name: Extract artifacts
         run: |
           mv target/release/onshape-level-gen ./onshapelevelgen-linux
+          strip ./onshapelevelgen-linux
           7z x *.zip
           mv win.zip/* ./onshapelevelgen-win.exe
           mv macos.zip/* ./onshapelevelgen-macos
@@ -82,7 +87,6 @@ jobs:
           echo "::set-output name=linux_build::onshapelevelgen-linux"
           echo "::set-output name=win_build::onshapelevelgen-win.exe"
           echo "::set-output name=macos_build::onshapelevelgen-macos"
-          ls
 
       # Publish builds
       - name: Remove nightly tag 
