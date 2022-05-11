@@ -35,7 +35,7 @@ pub fn get_data_from_ogg(path: &str) -> Result<(Samples, OutputParams), DecoderE
         .to_str()
         .unwrap_or(&"output_file")
         .to_owned();
-    let speed = 30;
+    let speed = 40;
     let audio_total_time = data.len() as f32 / info.sample_rate() as f32;
     let difficulty = Difficulty::Easy;
 
@@ -101,8 +101,8 @@ pub fn get_notes_from_samples(
         result.len()
     );
 
-    let count_min_limit = (samples.data.len() as f32 * 1.8 / samples.rate as f32) as usize;
-    let count_max_limit = (samples.data.len() as f32 * 2.5 / samples.rate as f32) as usize;
+    let count_min_limit = (samples.data.len() as f32 * 2.5 / samples.rate as f32) as usize;
+    let count_max_limit = (samples.data.len() as f32 * 3.5 / samples.rate as f32) as usize;
     if result.len() < count_min_limit {
         result = get_notes_from_samples(samples, difficulty_limit - 0.02)?;
     } else if result.len() > count_max_limit {
@@ -116,9 +116,9 @@ pub fn get_notes_from_samples(
 pub fn get_walls_from_notes(notes: &[Note]) -> Vec<Wall> {
     let mut rng = rand::thread_rng();
     let mut figures = vec![];
-    figures.extend(vec![0; notes.len() / 2]);
-    figures.extend(vec![1; notes.len() / 3]);
-    figures.extend(vec![2; notes.len() / 6]);
+    figures.extend(vec![0; notes.len() * 2 / 5]);
+    figures.extend(vec![1; notes.len() / 5]);
+    figures.extend(vec![2; notes.len() / 5]);
     figures.shuffle(&mut rng);
 
     let mut prev_wall = None;

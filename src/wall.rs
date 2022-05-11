@@ -33,8 +33,8 @@ impl Wall {
         prev_wall: &mut Option<Wall>,
         acc_coins: &mut u8,
     ) -> Self {
-        const MIN_PADDING: f32 = 0.5f32;
-        const MAX_COIN_COUNT: u8 = 6;
+        const MIN_PADDING: f32 = 0.3f32;
+        const MAX_COIN_COUNT: u8 = 4;
 
         let select: i32 = if (time2prev > MIN_PADDING
             || matches!(
