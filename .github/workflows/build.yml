@@ -56,15 +56,15 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEY_PWD" build.keychain
           codesign --options runtime --force --deep --sign "$WWDRTEAMID" onshape-level-gen
           
-          zip -9 -r onshape-level-gen.zip onshape-level-gen
+          zip -9 -r onshapelevelgen-macos.zip onshape-level-gen
           xcrun notarytool store-credentials "OLG" --apple-id "$APPLE_ID" --team-id "$WWDRTEAMID" --password "$APPLEID_APP_PWD"
-          xcrun notarytool submit onshape-level-gen.zip --keychain-profile "OLG" --wait
+          xcrun notarytool submit onshapelevelgen-macos.zip --keychain-profile "OLG" --wait
 
       - name: Upload traget bin
         uses: actions/upload-artifact@v2
         with:
           name: macos.zip
-          path: onshape-level-gen
+          path: onshapelevelgen-macos.zip
 
 
   Build_Bridge_Linux:
@@ -100,14 +100,14 @@ jobs:
           strip ./onshapelevelgen-linux
           7z x *.zip
           mv win.zip/* ./onshapelevelgen-win.exe
-          mv macos.zip/* ./onshapelevelgen-macos
+          mv macos.zip/* ./onshapelevelgen-macos.zip
 
       - name: Get packages file name
         id: names
         run: |
           echo "::set-output name=linux_build::onshapelevelgen-linux"
           echo "::set-output name=win_build::onshapelevelgen-win.exe"
-          echo "::set-output name=macos_build::onshapelevelgen-macos"
+          echo "::set-output name=macos_build::onshapelevelgen-macos.zip"
 
       # Publish builds
       - name: Remove nightly tag 
@@ -139,7 +139,7 @@ jobs:
           upload_url: ${{ steps.nightly_prerelease.outputs.upload_url }}
           asset_path: ${{ steps.names.outputs.linux_build }}
           asset_name: ${{ steps.names.outputs.linux_build }}
-          asset_content_type: application/octet-stream
+          asset_content_type: application/x-executable
 
       - name: Upload win nightly build
         uses: actions/upload-release-asset@v1
@@ -159,7 +159,7 @@ jobs:
           upload_url: ${{ steps.nightly_prerelease.outputs.upload_url }}
           asset_path: ${{ steps.names.outputs.macos_build }}
           asset_name: ${{ steps.names.outputs.macos_build }}
-          asset_content_type: application/octet-stream
+          asset_content_type: application/zip
 
       # Create version release if there is a version tag
       - name: Create tag release
@@ -184,7 +184,7 @@ jobs:
           upload_url: ${{ steps.tag_release.outputs.upload_url }}
           asset_path: ${{ steps.names.outputs.linux_build }}
           asset_name: ${{ steps.names.outputs.linux_build }}
-          asset_content_type: application/octet-stream
+          asset_content_type: application/x-executable
 
       - name: Upload win version build
         if: ${{ !contains(steps.vars.outputs.tag, '-') }}
@@ -206,4 +206,4 @@ jobs:
           upload_url: ${{ steps.tag_release.outputs.upload_url }}
           asset_path: ${{ steps.names.outputs.macos_build }}
           asset_name: ${{ steps.names.outputs.macos_build }}
-          asset_content_type: application/octet-stream
+          asset_content_type: application/zip
