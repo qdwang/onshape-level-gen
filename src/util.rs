@@ -9,8 +9,6 @@ use spectrum_analyzer::scaling::divide_by_N;
 use spectrum_analyzer::windows::hann_window;
 use spectrum_analyzer::{samples_fft_to_spectrum, FrequencyLimit};
 
-use rand::seq::SliceRandom;
-
 /// Get the one channel `Vec<f32>` data and output parameters from an ogg file.
 ///
 /// The samples data from 2 channels will be combined into one channel by averaging the values.
@@ -115,11 +113,6 @@ pub fn get_notes_from_samples(
 /// Get a series Wall from a note slice
 pub fn get_walls_from_notes(notes: &[Note]) -> Vec<Wall> {
     let mut rng = rand::thread_rng();
-    let mut figures = vec![];
-    figures.extend(vec![0; notes.len() * 2 / 5]);
-    figures.extend(vec![1; notes.len() / 5]);
-    figures.extend(vec![2; notes.len() / 5]);
-    figures.shuffle(&mut rng);
 
     let mut prev_wall = None;
     let mut acc_coins = 0u8;
@@ -133,7 +126,6 @@ pub fn get_walls_from_notes(notes: &[Note]) -> Vec<Wall> {
                 &mut rng,
                 time2prev,
                 time2next,
-                &mut figures,
                 &mut prev_wall,
                 &mut acc_coins,
             )

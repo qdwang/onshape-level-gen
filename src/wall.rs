@@ -29,12 +29,11 @@ impl Wall {
         rng: &mut ThreadRng,
         time2prev: f32,
         time2next: f32,
-        figures: &mut Vec<i32>,
         prev_wall: &mut Option<Wall>,
         acc_coins: &mut u8,
     ) -> Self {
-        const MIN_PADDING: f32 = 0.5f32;
-        const MAX_COIN_COUNT: u8 = 4;
+        const MIN_PADDING: f32 = 0.3f32;
+        const MAX_COIN_COUNT: u8 = 3;
 
         let select: i32 = if (time2prev > MIN_PADDING
             || matches!(
@@ -47,7 +46,18 @@ impl Wall {
             && (time2next > MIN_PADDING || *acc_coins >= MAX_COIN_COUNT)
         {
             *acc_coins = 0;
-            figures.pop().unwrap_or(3)
+            if time2next < 2.0 * MIN_PADDING {
+                match rng.gen_range(0..=2) {
+                    0 | 1 => 0,
+                    _ => 1,
+                }
+            } else {
+                match rng.gen_range(0..=3) {
+                    0 => 0,
+                    1 => 1,
+                    _ => 2,
+                }
+            }
         } else {
             *acc_coins += 1;
             3
