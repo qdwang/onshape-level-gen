@@ -89,7 +89,11 @@ impl Wall {
                         DodgeType::TopRight => DodgeType::TopLeft,
                     }
                 } else {
-                    rand::random()
+                    if time2prev < 0.5 || time2next < 0.5 {
+                       *[DodgeType::Top, DodgeType::Left, DodgeType::Right].choose(rng).unwrap()
+                    } else {
+                        rand::random()
+                    }
                 };
 
                 WallType::Dodge {
