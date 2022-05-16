@@ -2,6 +2,9 @@
 name = "onshape-level-gen"
 version = "0.1.4"
 edition = "2021"
+license = "MIT"
+description = "An auto level generator for the OnShape VR game"
+documentation = "https://docs.rs/onshape-level-gen"
 
 [dependencies]
 creak = { version = "*", default-features = false, features = ["vorbis"] }
