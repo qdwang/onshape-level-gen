@@ -7,7 +7,7 @@ description = "An auto level generator for the OnShape VR game"
 documentation = "https://docs.rs/onshape-level-gen"
 
 [dependencies]
-creak = { version = "*", default-features = false, features = ["vorbis"] }
+creak = { version = "0.3", default-features = false, features = ["vorbis"] }
 spectrum-analyzer = "1.2"
 rand = "0.8"
 thiserror = "1.0"
