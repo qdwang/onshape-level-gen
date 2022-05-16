@@ -1,4 +1,4 @@
-//! This file contains general functions.
+//! Contains general and utility functions.
 //!
 use std::path::Path;
 
@@ -9,7 +9,7 @@ use spectrum_analyzer::scaling::divide_by_N;
 use spectrum_analyzer::windows::hann_window;
 use spectrum_analyzer::{samples_fft_to_spectrum, FrequencyLimit};
 
-/// Get the one channel `Vec<f32>` data and output parameters from an ogg file.
+/// Gets the one channel `Vec<f32>` data and output parameters from an ogg file.
 ///
 /// The samples data from 2 channels will be combined into one channel by averaging the values.
 pub fn get_data_from_ogg(path: &str) -> Result<(Samples, OutputParams), DecoderError> {
@@ -52,7 +52,7 @@ pub fn get_data_from_ogg(path: &str) -> Result<(Samples, OutputParams), DecoderE
     ))
 }
 
-/// Get a series of `Note` from a `Samples` object.
+/// Gets a series of `Note` from a `Samples` object.
 pub fn get_notes_from_samples(
     samples: Samples,
     difficulty_limit: f32,
@@ -110,7 +110,7 @@ pub fn get_notes_from_samples(
     Ok(result)
 }
 
-/// Get a series Wall from a note slice
+/// Gets a series `Wall` from a note slice
 pub fn get_walls_from_notes(notes: &[Note]) -> Vec<Wall> {
     let mut rng = rand::thread_rng();
 
@@ -133,7 +133,7 @@ pub fn get_walls_from_notes(notes: &[Note]) -> Vec<Wall> {
         .collect()
 }
 
-/// Generating the output yml string content
+/// Generates the output yml string content
 pub fn gen_yml(
     OutputParams {
         title,
@@ -182,7 +182,7 @@ levels:
     let mut rng = rand::thread_rng();
 
     for wall in walls {
-        let time = format!("{:.2}", wall.time);
+        let time = format!("{:.2}", wall.0);
         let code = wall.to_code(&mut rng);
 
         result.push_str(

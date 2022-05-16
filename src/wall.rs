@@ -1,12 +1,12 @@
-//! This file contains implementations for Wall module.
-//!
+//! Contains implementations for Wall module.
+
 use super::*;
 use rand::rngs::ThreadRng;
 use rand::seq::SliceRandom;
 use std::cmp;
 
 impl Wall {
-    /// This function will generate a random shape by the given pose.
+    /// Generates a random shape by the given pose.
     pub fn choose_shape_patterns(main_pose: &str, mut rng: &mut ThreadRng) -> String {
         let available_chars = match main_pose {
             "CUC" => ['0', '1', '2', '3', '4', '5', '7', '8', '9', 'A', 'B'].as_slice(),
@@ -24,6 +24,12 @@ impl Wall {
         )
     }
 
+    /// Generates a new Wall object from the given note.
+    ///
+    /// * `time2prev`: the padding time to the previous note
+    /// * `time2next`: the padding time to the next note
+    /// * `prev_wall`: the previous generated wall which is for pattern change
+    /// * `acc_coins`: the number of accumulated generated coins
     pub fn new(
         note: &Note,
         rng: &mut ThreadRng,
@@ -35,14 +41,8 @@ impl Wall {
         const MIN_PADDING: f32 = 0.3f32;
         const MAX_COIN_COUNT: u8 = 3;
 
-        let select: i32 = if (time2prev > MIN_PADDING
-            || matches!(
-                prev_wall,
-                Some(Wall {
-                    time: _,
-                    t: WallType::Coin { x: _, y: _ }
-                })
-            ))
+        let is_prev_coin = matches!(prev_wall, Some(Wall(_, WallType::Coin { x: _, y: _ })));
+        let choice: i32 = if (time2prev > MIN_PADDING || is_prev_coin)
             && (time2next > MIN_PADDING || *acc_coins >= MAX_COIN_COUNT)
         {
             *acc_coins = 0;
@@ -63,7 +63,7 @@ impl Wall {
             3
         };
 
-        let wall_type = match select {
+        let wall_type = match choice {
             0 => WallType::Shape {
                 lean: rand::random(),
                 standing: rand::random(),
@@ -76,11 +76,7 @@ impl Wall {
             2 => {
                 let d = ((time2next * 100.) as u16).saturating_sub(50);
 
-                let t = if let Some(Wall {
-                    time: _,
-                    t: WallType::Dodge { t, duration: _ },
-                }) = prev_wall
-                {
+                let t = if let Some(Wall(_, WallType::Dodge { t, duration: _ })) = prev_wall {
                     match t {
                         DodgeType::TopLeft => DodgeType::TopRight,
                         DodgeType::Left => DodgeType::Right,
@@ -90,7 +86,9 @@ impl Wall {
                     }
                 } else {
                     if time2prev < 0.5 || time2next < 0.5 {
-                       *[DodgeType::Top, DodgeType::Left, DodgeType::Right].choose(rng).unwrap()
+                        *[DodgeType::Top, DodgeType::Left, DodgeType::Right]
+                            .choose(rng)
+                            .unwrap()
                     } else {
                         rand::random()
                     }
@@ -102,11 +100,7 @@ impl Wall {
                 }
             }
             _ => {
-                let (range_x, range_y) = if let Some(Wall {
-                    time: _,
-                    t: WallType::Coin { x, y },
-                }) = prev_wall
-                {
+                let (range_x, range_y) = if let Some(Wall(_, WallType::Coin { x, y })) = prev_wall {
                     ((*x - 1..=*x + 1), (*y - 1..=*y + 1))
                 } else {
                     ((-5..=5), (3..=10))
@@ -118,16 +112,14 @@ impl Wall {
             }
         };
 
-        let result = Wall {
-            time: note.time,
-            t: wall_type,
-        };
+        let result = Wall(note.time, wall_type);
         *prev_wall = Some(result.clone());
         result
     }
 
+    /// Converts a `Wall` to the shape code used in game.
     pub fn to_code(&self, mut rng: &mut ThreadRng) -> String {
-        match self.t {
+        match self.1 {
             WallType::Shape { lean, standing } => {
                 let mut result = String::with_capacity(9);
                 result.push_str("WP.C");

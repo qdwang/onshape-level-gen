@@ -1,4 +1,4 @@
-//! Library used in onshape_level_gen
+//! Contains all the structs, enum and trait definitions for onshape-level-gen
 //! 
 use rand::{
     distributions::{Distribution, Standard},
@@ -9,23 +9,28 @@ use std::{string::ToString, fmt::Display};
 pub mod util;
 pub mod wall;
 
+/// A collection of raw f32 data with sample rate from sound file.
 pub struct Samples {
     rate: u32,
     data: Vec<f32>,
 }
 
+/// The FFT result of a fixed segmenet of samples.
 pub struct Note {
     pub freq: f32,
     pub val: f32,
     pub time: f32,
 }
 
+/// A most common type(left, center, right) in the OnShape game.
 #[derive(Debug, Copy, Clone)]
 pub enum LCR {
     L,
     C,
     R,
 }
+
+/// Represent the 5 dodge types in the OnShape game.
 #[derive(Debug, Copy, Clone)]
 pub enum DodgeType {
     TopLeft,
@@ -34,6 +39,8 @@ pub enum DodgeType {
     Right,
     TopRight,
 }
+
+/// All 4 possible shapes in the OnShape game.
 #[derive(Debug, Clone)]
 pub enum WallType {
     Shape {
@@ -55,15 +62,15 @@ pub enum WallType {
     }
 }
 
+/// Represents the time and the type of a wall.
 #[derive(Debug, Clone)]
-pub struct Wall {
-    time: f32,
-    t: WallType,
-}
+pub struct Wall(f32, WallType);
 
+/// 4 Difficulties used in OnShape level script.
 pub enum Difficulty {
     Beginner, Easy, Medium, Hard
 }
+/// The parameters needed to generate the yml file.
 pub struct OutputParams {
     title: String,
     pub output_file: String,
@@ -71,8 +78,6 @@ pub struct OutputParams {
     audio_total_time: f32,
     difficulty: Difficulty,
 }
-
-
 
 impl LCR {
     pub fn to_str(&self, center_char: Option<&'static str>) -> &'static str {
