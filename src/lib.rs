@@ -1,4 +1,19 @@
-//! Contains all the structs, enum and trait definitions for onshape-level-gen
+//! This crate contains essential utilities to generate an OnShape yml level file.
+//! 
+//! ## Example
+//! ```
+//! use onshape_level_gen::util::*;
+//! 
+//! // this difficulty is a FFT result iterating factor.
+//! let init_difficulty_limit = 1.2f32;
+//! 
+//! let (samples, output_params) = get_data_from_ogg(path).unwrap();
+//! let notes = get_notes_from_samples(samples, init_difficulty_limit).unwrap();
+//! let walls = get_walls_from_notes(&notes);
+//! let yml_content = gen_yml(&output_params, walls);
+//! 
+//! std::fs::write("~/level.yml", yml_content).unwrap();
+//! ```
 //! 
 use rand::{
     distributions::{Distribution, Standard},
