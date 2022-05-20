@@ -1,6 +1,6 @@
 [package]
 name = "onshape-level-gen"
-version = "0.1.5"
+version = "0.1.6"
 edition = "2021"
 license = "MIT"
 description = "An auto level generator for the OnShape VR game"
