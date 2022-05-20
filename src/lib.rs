@@ -87,13 +87,18 @@ pub struct Wall(f32, WallType);
 pub enum Difficulty {
     Beginner, Easy, Medium, Hard
 }
-/// The parameters needed to generate the yml file.
-pub struct OutputParams {
+/// Information about the original sound file.
+pub struct SoundFileInfo {
     title: String,
-    pub output_file: String,
-    speed: u8,
     audio_total_time: f32,
-    difficulty: Difficulty,
+}
+
+/// Parameters to adjust level difficulty.
+pub struct LevelDifficulty {
+    pub speed: u8,
+    pub difficulty: Difficulty,
+    pub min_interval: f32,
+    pub max_consecutive_coins: u8
 }
 
 impl LCR {

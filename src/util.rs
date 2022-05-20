@@ -12,8 +12,8 @@ use spectrum_analyzer::{samples_fft_to_spectrum, FrequencyLimit};
 /// Gets the one channel `Vec<f32>` data and output parameters from an ogg file.
 ///
 /// The samples data from 2 channels will be combined into one channel by averaging the values.
-pub fn get_data_from_ogg(path: &str) -> Result<(Samples, OutputParams), DecoderError> {
-    println!("Reading file: {}", path);
+pub fn get_data_from_ogg(path: &Path) -> Result<(Samples, SoundFileInfo), DecoderError> {
+    println!("Reading file: {:?}", path);
     let decoder = Decoder::open(path)?;
     let info = decoder.info();
 
@@ -22,32 +22,21 @@ pub fn get_data_from_ogg(path: &str) -> Result<(Samples, OutputParams), DecoderE
         .collect::<Result<Vec<f32>, DecoderError>>()?;
     let data: Vec<f32> = data.chunks_exact(2).map(|x| (x[0] + x[1]) / 2.0).collect();
 
-    let path = Path::new(path);
     let title = path
         .file_stem()
         .and_then(|x| x.to_str())
         .unwrap_or(&"file_name")
         .to_owned();
-    let output_file = path
-        .with_extension("yml")
-        .to_str()
-        .unwrap_or(&"output_file")
-        .to_owned();
-    let speed = 40;
     let audio_total_time = data.len() as f32 / info.sample_rate() as f32;
-    let difficulty = Difficulty::Easy;
 
     Ok((
         Samples {
             rate: info.sample_rate(),
             data,
         },
-        OutputParams {
+        SoundFileInfo {
             title,
-            output_file,
-            speed,
             audio_total_time,
-            difficulty,
         },
     ))
 }
@@ -111,7 +100,7 @@ pub fn get_notes_from_samples(
 }
 
 /// Gets a series `Wall` from a note slice
-pub fn get_walls_from_notes(notes: &[Note]) -> Vec<Wall> {
+pub fn get_walls_from_notes(notes: &[Note], level_difficulty: &LevelDifficulty) -> Vec<Wall> {
     let mut rng = rand::thread_rng();
 
     let mut prev_wall = None;
@@ -123,6 +112,7 @@ pub fn get_walls_from_notes(notes: &[Note]) -> Vec<Wall> {
             let time2next = notes[2].time - notes[1].time;
             Wall::new(
                 &notes[1],
+                level_difficulty,
                 &mut rng,
                 time2prev,
                 time2next,
@@ -135,13 +125,16 @@ pub fn get_walls_from_notes(notes: &[Note]) -> Vec<Wall> {
 
 /// Generates the output yml string content
 pub fn gen_yml(
-    OutputParams {
+    SoundFileInfo {
         title,
-        output_file: _,
-        speed,
         audio_total_time,
+    }: &SoundFileInfo,
+    LevelDifficulty {
+        speed,
         difficulty,
-    }: &OutputParams,
+        min_interval: _,
+        max_consecutive_coins: _,
+    }: &LevelDifficulty,
     walls: Vec<Wall>,
 ) -> String {
     println!("Generating yml content");

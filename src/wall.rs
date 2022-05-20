@@ -32,21 +32,20 @@ impl Wall {
     /// * `acc_coins`: the number of accumulated generated coins
     pub fn new(
         note: &Note,
+        level_difficulty: &LevelDifficulty,
         rng: &mut ThreadRng,
         time2prev: f32,
         time2next: f32,
         prev_wall: &mut Option<Wall>,
         acc_coins: &mut u8,
     ) -> Self {
-        const MIN_PADDING: f32 = 0.3f32;
-        const MAX_COIN_COUNT: u8 = 3;
-
         let is_prev_coin = matches!(prev_wall, Some(Wall(_, WallType::Coin { x: _, y: _ })));
-        let choice: i32 = if (time2prev > MIN_PADDING || is_prev_coin)
-            && (time2next > MIN_PADDING || *acc_coins >= MAX_COIN_COUNT)
+        let choice: i32 = if (time2prev > level_difficulty.min_interval || is_prev_coin)
+            && (time2next > level_difficulty.min_interval
+                || *acc_coins >= level_difficulty.max_consecutive_coins)
         {
             *acc_coins = 0;
-            if time2next < 2.0 * MIN_PADDING {
+            if time2next < 2.0 * level_difficulty.min_interval {
                 match rng.gen_range(0..=2) {
                     0 | 1 => 0,
                     _ => 1,
