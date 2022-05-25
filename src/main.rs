@@ -53,8 +53,8 @@ fn main() -> Result<()> {
     match args.as_slice() {
         [_] => {
             println!(
-                "===== onshapelevelgen: A tool to generate OnShape VR game levels from music =====
-\nUsage: onshapelevelgen [your_ogg_vorbis_file | folder_contains_ogg_files]"
+                "===== onshapelevelgen v{}: A tool to generate OnShape VR game levels from music =====
+\nUsage: onshapelevelgen [your_ogg_vorbis_file | folder_contains_ogg_files]", env!("CARGO_PKG_VERSION")
             );
         }
         [_, target] => {
