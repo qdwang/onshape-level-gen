@@ -40,7 +40,8 @@ impl Wall {
         acc_coins: &mut u8,
     ) -> Self {
         let is_prev_coin = matches!(prev_wall, Some(Wall(_, WallType::Coin { x: _, y: _ })));
-        let choice: i32 = if note.time > 5.0 && (time2prev > level_difficulty.min_interval || is_prev_coin)
+        // 1.0s is the safe time
+        let choice: i32 = if note.time > 1.0 && (time2prev > level_difficulty.min_interval || is_prev_coin)
             && (time2next > level_difficulty.min_interval
                 || *acc_coins >= level_difficulty.max_consecutive_coins)
         {
